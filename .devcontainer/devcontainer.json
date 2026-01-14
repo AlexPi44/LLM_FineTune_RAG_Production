@@ -1,45 +1,20 @@
-{
-  "name": "LLM Prod",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/poetry:2": {
-      "version": "1.8.3"
-    },
-    "ghcr.io/meaningful-ooo/devcontainer-features/pyenv:2": {
-      "pyenvVersion": "latest"
-    },
-    "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest"
-    }
-  },
-  "postCreateCommand": "bash /workspaces/LLM_FineTune_RAG_Production/.devcontainer/postCreate.sh",
-  "remoteUser": "codespace",
-  "workspaceFolder": "/workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook",
-  "remoteEnv": {
-    "PATH": "/home/codespace/.local/bin:/home/codespace/.pyenv/bin:/home/codespace/.pyenv/shims:${containerEnv:PATH}",
-    "PYENV_ROOT": "/home/codespace/.pyenv"
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "ms-python.flake8",
-        "tamasfe.even-better-toml"
-      ],
-      "settings": {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "terminal.integrated.cwd": "${workspaceFolder}",
-        "python.formatting.provider": "black",
-        "python.linting.enabled": true,
-        "python.linting.flake8Enabled": true,
-        "editor.formatOnSave": true,
-        "files.exclude": {
-          "**/.git": false
-        }
-      }
-    }
-  }
-}
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORKSPACE_ROOT="${CODESPACE_WORKSPACE_FOLDER:-$(pwd)}"
+PROJECT_DIR="$WORKSPACE_ROOT/LLM-Engineers-Handbook"
+REPO_URL="https://github.com/PacktPublishing/LLM-Engineers-Handbook.git"
+
+cd "$WORKSPACE_ROOT"
+
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+  git clone "$REPO_URL" "$PROJECT_DIR"
+fi
+
+cd "$PROJECT_DIR"
+
+poetry config virtualenvs.in-project true --local
+poetry env use "$(which python)"
+poetry install --without aws --no-interaction --no-ansi
+
+[ -f .env ] || [ ! -f .env.example ] || cp .env.example .env
