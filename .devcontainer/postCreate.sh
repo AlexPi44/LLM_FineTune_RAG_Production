@@ -1,34 +1,50 @@
 #!/usr/bin/env bash
-set -e  # Exit on error, but we'll handle errors manually where needed
+set -e
 
 echo "================================"
 echo "Starting postCreate script"
 echo "================================"
 
-# Define paths
+# Define paths - YOUR repo is the workspace root
 WORKSPACE_ROOT="/workspaces/LLM_FineTune_RAG_Production"
 PROJECT_DIR="$WORKSPACE_ROOT/LLM-Engineers-Handbook"
 REPO_URL="https://github.com/PacktPublishing/LLM-Engineers-Handbook.git"
 
-echo "Workspace root: $WORKSPACE_ROOT"
-echo "Project directory: $PROJECT_DIR"
+echo "Your repo (workspace): $WORKSPACE_ROOT"
+echo "Target project directory: $PROJECT_DIR"
 echo "User: $(whoami)"
 echo "Home: $HOME"
+
+echo "================================"
+echo "Verifying workspace exists"
+echo "================================"
+
+# Make sure we're in your repo first
+if [ ! -d "$WORKSPACE_ROOT" ]; then
+    echo "ERROR: Workspace directory $WORKSPACE_ROOT does not exist!"
+    echo "Current location: $(pwd)"
+    echo "Available directories:"
+    ls -la /workspaces/
+    exit 1
+fi
+
+cd "$WORKSPACE_ROOT"
+echo "✓ In workspace: $(pwd)"
+echo "Workspace contents:"
+ls -la
 
 echo "================================"
 echo "Checking repository status"
 echo "================================"
 
-cd "$WORKSPACE_ROOT"
-
 # Check if the LLM-Engineers-Handbook directory exists and has content
 if [ -d "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/pyproject.toml" ]; then
-    echo "Repository already exists and appears valid"
+    echo "✓ LLM-Engineers-Handbook repository already exists and appears valid"
     cd "$PROJECT_DIR"
     
     # Update the repository to get latest changes
     echo "Pulling latest changes..."
-    git pull origin main || echo "Warning: Could not pull latest changes (might be on a different branch or no internet)"
+    git pull origin main 2>/dev/null || git pull origin master 2>/dev/null || echo "Warning: Could not pull latest changes"
 else
     echo "Repository not found or incomplete, cloning..."
     
@@ -38,8 +54,8 @@ else
         rm -rf "$PROJECT_DIR"
     fi
     
-    # Clone the repository
-    echo "Cloning repository from $REPO_URL..."
+    # Clone the repository into your workspace
+    echo "Cloning repository from $REPO_URL into $WORKSPACE_ROOT..."
     git clone "$REPO_URL" "$PROJECT_DIR"
     
     if [ $? -ne 0 ]; then
@@ -47,17 +63,20 @@ else
         exit 1
     fi
     
+    echo "✓ Repository cloned successfully"
     cd "$PROJECT_DIR"
 fi
 
 # Verify we're in the right place
+echo "Current directory: $(pwd)"
 if [ ! -f "pyproject.toml" ]; then
     echo "ERROR: pyproject.toml not found after setup!"
-    echo "Current directory: $(pwd)"
     echo "Directory contents:"
     ls -la
     exit 1
 fi
+
+echo "✓ Found pyproject.toml"
 
 echo "================================"
 echo "Setting up pyenv"
@@ -71,7 +90,7 @@ export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
 if command -v pyenv >/dev/null 2>&1; then
     eval "$(pyenv init -)"
     eval "$(pyenv init --path)"
-    echo "Pyenv version: $(pyenv --version)"
+    echo "✓ Pyenv version: $(pyenv --version)"
 else
     echo "WARNING: pyenv not found, installing manually..."
     curl https://pyenv.run | bash
@@ -86,8 +105,8 @@ if [ -f ".python-version" ]; then
     echo "Found .python-version: $REQUIRED_PYTHON"
     
     # Check if this Python version is already installed
-    if pyenv versions | grep -q "$REQUIRED_PYTHON"; then
-        echo "Python $REQUIRED_PYTHON already installed"
+    if pyenv versions 2>/dev/null | grep -q "$REQUIRED_PYTHON"; then
+        echo "✓ Python $REQUIRED_PYTHON already installed"
     else
         echo "Installing Python $REQUIRED_PYTHON with pyenv..."
         pyenv install "$REQUIRED_PYTHON"
@@ -95,20 +114,20 @@ if [ -f ".python-version" ]; then
     
     # Set local Python version
     pyenv local "$REQUIRED_PYTHON"
-    echo "Set local Python version to: $(pyenv version)"
+    echo "✓ Set local Python version to: $(pyenv version)"
 else
     echo "No .python-version file found"
     echo "Installing Python 3.11.8 as recommended..."
     
-    if ! pyenv versions | grep -q "3.11.8"; then
+    if ! pyenv versions 2>/dev/null | grep -q "3.11.8"; then
         pyenv install 3.11.8
     fi
     
     pyenv local 3.11.8
 fi
 
-echo "Current Python version: $(python --version)"
-echo "Python location: $(which python)"
+echo "✓ Current Python version: $(python --version)"
+echo "✓ Python location: $(which python)"
 
 echo "================================"
 echo "Setting up Poetry"
@@ -124,8 +143,8 @@ if ! command -v poetry >/dev/null 2>&1; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-echo "Poetry version: $(poetry --version)"
-echo "Poetry location: $(which poetry)"
+echo "✓ Poetry version: $(poetry --version)"
+echo "✓ Poetry location: $(which poetry)"
 
 # Configure Poetry as per project instructions
 echo "Configuring Poetry..."
@@ -161,7 +180,7 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
     echo "Creating .env file from .env.example..."
     cp .env.example .env
     echo "✓ .env file created. Please fill in your credentials!"
-    echo "  Edit the .env file in the root of the project."
+    echo "  Edit the .env file at: $PROJECT_DIR/.env"
 else
     if [ -f ".env" ]; then
         echo "✓ .env file already exists"
@@ -200,15 +219,19 @@ fi
 
 # Auto-cd to project directory on new terminal
 if [ "$PWD" = "/workspaces/LLM_FineTune_RAG_Production" ]; then
-    cd LLM-Engineers-Handbook 2>/dev/null || true
+    if [ -d "LLM-Engineers-Handbook" ]; then
+        cd LLM-Engineers-Handbook 2>/dev/null || true
+    fi
 fi
 
 # Project-specific aliases
 alias poe='poetry run poe'
 alias poetry-shell='poetry shell'
+alias project='cd /workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook'
 
 # Show helpful info when entering project
 if [ "$PWD" = "/workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook" ]; then
+    echo ""
     echo "📚 LLM Engineers Handbook Project"
     echo "   Python: $(python --version 2>&1 | cut -d' ' -f2)"
     echo "   Poetry: $(poetry --version 2>&1 | cut -d' ' -f3)"
@@ -217,6 +240,7 @@ if [ "$PWD" = "/workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook" ]
     else
         echo "   ⚠ .env file missing - create from .env.example"
     fi
+    echo ""
 fi
 
 # ===== End LLM Project Environment Setup =====
@@ -234,8 +258,9 @@ echo "================================"
 echo "✅ Setup Complete!"
 echo "================================"
 echo ""
-echo "📍 Project Location:"
-echo "   $PROJECT_DIR"
+echo "📂 Directory Structure:"
+echo "   Your repo: /workspaces/LLM_FineTune_RAG_Production/"
+echo "   Project:   /workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook/"
 echo ""
 echo "🐍 Python Environment:"
 echo "   Python: $(python --version 2>&1)"
@@ -247,10 +272,12 @@ poetry env info | grep "Path:" || true
 echo ""
 echo "⚙️  Next Steps:"
 echo "   1. Edit .env file with your credentials"
+echo "      Location: $PROJECT_DIR/.env"
 echo "   2. Run 'poetry shell' to activate the virtual environment"
 echo "   3. Use 'poetry poe <command>' to run project tasks"
 echo ""
 echo "📚 Common Commands:"
+echo "   project                # Quick cd to project directory"
 echo "   poetry shell           # Activate virtual environment"
 echo "   poetry poe --help      # See available Poe tasks"
 echo "   poetry install         # Install/update dependencies"
