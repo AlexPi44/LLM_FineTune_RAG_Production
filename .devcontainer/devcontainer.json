@@ -3,10 +3,13 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "features": {
     "ghcr.io/devcontainers-contrib/features/poetry:2": {
-      "version": "latest"
+      "version": "1.8.3"
     },
     "ghcr.io/meaningful-ooo/devcontainer-features/pyenv:2": {
       "pyenvVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
     }
   },
   "postCreateCommand": "bash /workspaces/LLM_FineTune_RAG_Production/.devcontainer/postCreate.sh",
@@ -23,7 +26,8 @@
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
         "ms-python.isort",
-        "ms-python.flake8"
+        "ms-python.flake8",
+        "tamasfe.even-better-toml"
       ],
       "settings": {
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
@@ -31,11 +35,11 @@
         "python.formatting.provider": "black",
         "python.linting.enabled": true,
         "python.linting.flake8Enabled": true,
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "files.exclude": {
+          "**/.git": false
+        }
       }
     }
-  },
-  "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer,target=/tmp/.devcontainer-temp,type=bind,consistency=cached"
-  ]
+  }
 }
