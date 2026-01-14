@@ -1,0 +1,32 @@
+# Cloned LLM Engineers Handbook repository
+# (You're working IN this repo, but not tracking it in YOUR repo)
+LLM-Engineers-Handbook/
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.poetry/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
