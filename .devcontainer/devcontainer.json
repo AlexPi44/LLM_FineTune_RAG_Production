@@ -1,0 +1,41 @@
+{
+  "name": "LLM Prod",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/poetry:2": {
+      "version": "latest"
+    },
+    "ghcr.io/meaningful-ooo/devcontainer-features/pyenv:2": {
+      "pyenvVersion": "latest"
+    }
+  },
+  "postCreateCommand": "bash /workspaces/LLM_FineTune_RAG_Production/.devcontainer/postCreate.sh",
+  "remoteUser": "codespace",
+  "workspaceFolder": "/workspaces/LLM_FineTune_RAG_Production/LLM-Engineers-Handbook",
+  "remoteEnv": {
+    "PATH": "/home/codespace/.local/bin:/home/codespace/.pyenv/bin:/home/codespace/.pyenv/shims:${containerEnv:PATH}",
+    "PYENV_ROOT": "/home/codespace/.pyenv"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.flake8"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "terminal.integrated.cwd": "${workspaceFolder}",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer,target=/tmp/.devcontainer-temp,type=bind,consistency=cached"
+  ]
+}
